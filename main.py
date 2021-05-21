@@ -34,32 +34,36 @@ def choose_city(message):
 @bot.callback_query_handler(func=lambda call: True)
 def query_handler(call):
   if call.data == '1':
-    temp = str(response_current["main"]["temp"])
-    feels_like = str(response_current["main"]["feels_like"])
-    wind_speed = str(response_current["wind"]["speed"])
+    temp = str(round(response_current["main"]["temp"]))
+    feels_like = str(round(response_current["main"]["feels_like"]))
+    wind_speed = str(round(response_current["wind"]["speed"]))
     description = response_current["weather"][0]["description"]
     forecast = "Сегодня " + description + ", " + temp + " C\nОщущается как " + feels_like + " C\nВетер " + wind_speed + " м/с"
     
   elif call.data == '2':
     response_onecall = requests.get("https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&exclude=" + part + "&appid=" + weather_token + "&lang=" + lang + "&units=" + units).json()
-    forecast = ""
+    forecast = "Прогноз на 2 дня:\n"
+    hour_index = 0
     for hour in response_onecall["hourly"]:
-      dt = datetime.fromtimestamp(hour["dt"], pytz.timezone('UTC'))
-      dt_str = str(dt.date()) + " " + str(dt.hour)
-      temp = str(hour["temp"])
-      wind_speed = str(hour["wind_speed"])
-      forecast += dt_str + "ч: " + temp + " C, ветер " + wind_speed + " м/с\n"
+      if hour_index % 4 == 0:
+        dt = datetime.fromtimestamp(hour["dt"], pytz.timezone('UTC'))
+        dt_str = str(dt.date()) + " " + str(dt.hour)
+        temp = str(round(hour["temp"]))
+        wind_speed = str(round(hour["wind_speed"]))
+        forecast += dt_str + ", ч: " + temp + " C, ветер " + wind_speed + " м/с\n"
+      hour_index += 1
+      
 
   elif call.data == '3':
     response_onecall = requests.get("https://api.openweathermap.org/data/2.5/onecall?lat=" + lat + "&lon=" + lon + "&exclude=" + part + "&appid=" + weather_token + "&lang=" + lang + "&units=" + units).json()
-    forecast = ""
+    forecast = "Прогноз на неделю:\n"
     for day in response_onecall["daily"]:
       dt = datetime.fromtimestamp(day["dt"], pytz.timezone('UTC'))
       dt_str = str(dt.date())
-      temp = str(day["temp"]["day"])
-      wind_speed = str(day["wind_speed"])
+      temp = str(round(day["temp"]["day"]))
+      wind_speed = str(round(day["wind_speed"]))
       description = day["weather"][0]["description"]
-      forecast += dt_str + ": " + description + ", " + temp + "C, ветер " + wind_speed + " м/с\n"
+      forecast += dt_str + ": " + description + ", " + temp + " C, ветер " + wind_speed + " м/с\n"
 
   bot.send_message(call.message.chat.id, forecast)
 
